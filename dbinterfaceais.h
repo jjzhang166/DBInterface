@@ -23,6 +23,7 @@ class DBInterfaceAIS : public QObject
 public:
     explicit DBInterfaceAIS( QMutex *mutex,StructDBInfo structDBInfo,QObject *parent = 0);
     bool connectToDB();
+    bool quickInsert(QString tableName,QList <QVariantList>);//快速将大量数据插入表格
     ~DBInterfaceAIS();
 
     bool hasFeatureOfTransaction();

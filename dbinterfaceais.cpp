@@ -42,6 +42,11 @@ bool DBInterfaceAIS::connectToDB()
     }    
 }
 
+bool DBInterfaceAIS::quickInsert(QString tableName,QList <QVariantList>)//快速将大量数据插入表格
+{
+
+}
+
 QStringList DBInterfaceAIS::getSourceDBTablePartitions(QString tableName)
 {
     QStringList listPartitions;
