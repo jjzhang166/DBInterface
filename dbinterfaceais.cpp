@@ -42,9 +42,42 @@ bool DBInterfaceAIS::connectToDB()
     }    
 }
 
-bool DBInterfaceAIS::quickInsert(QString tableName,QList <QVariantList>)//快速将大量数据插入表格
+//快速将大量数据插入表格
+bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QList <QVariantList> listColumnData)
 {
+    query.setForwardOnly(true);
+    qint16 columnCount=listColumnData.size();
+    if(columnCount<=0)
+        return false;
 
+    QString prepareSQL="insert into "+tableName+" values (";
+    for(int i=0;i<columnCount;i++)
+        prepareSQL.append("?,");
+
+    prepareSQL.chop(1); //去掉最后一个逗号
+    prepareSQL.append(")");
+
+    if(!query.prepare(prepareSQL))
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+
+    while(!listColumnData.isEmpty())
+    {
+        QVariantList listRowData=listColumnData.takeFirst();
+        query.addBindValue(listRowData);
+    }
+
+    if (!query.execBatch())
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+    else
+        return true;
 }
 
 QStringList DBInterfaceAIS::getSourceDBTablePartitions(QString tableName)

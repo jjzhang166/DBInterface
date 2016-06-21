@@ -7,6 +7,9 @@
 
 #define TABLE_NAME_FOR_CON_CHECK "DUAL" //用于测试数据库连接性
 
+#define BATCHES_OF_SINGLE_TRANSACTION 1000 //一个事务中多少个batch
+#define ROWS_OF_SINGLE_BATCH 1500 //一个Batch导入多少行数据
+
 struct StructDBInfo
 {
     QString type;
@@ -23,7 +26,6 @@ class DBInterfaceAIS : public QObject
 public:
     explicit DBInterfaceAIS( QMutex *mutex,StructDBInfo structDBInfo,QObject *parent = 0);
     bool connectToDB();
-    bool quickInsert(QString tableName,QList <QVariantList>);//快速将大量数据插入表格
     ~DBInterfaceAIS();
 
     bool hasFeatureOfTransaction();
@@ -31,6 +33,8 @@ public:
     bool commitTransaction();
 
     QSqlDatabase *db;
+    //快速将多行数据批量插入表格
+    bool quickInsertInBatch(QSqlQuery query,QString tableName,QList <QVariantList> listColumnData);
 
     bool checkConnection(QSqlDatabase * &dbParam);
     QStringList getSourceDBTablePartitions(QString tableName);
