@@ -34,7 +34,10 @@ public:
 
     QSqlDatabase *db;
     //快速将多行数据批量插入表格
-    bool quickInsertInBatch(QSqlQuery query,QString tableName,QList <QVariantList> listColumnData);
+    bool quickInsertInBatch(QSqlQuery query,QString tableName,
+                            QList <QVariantList> listColumnData,QString insertMethod="insert ignore");
+    //将一行数据插入表格
+    bool insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod);
 
     bool checkConnection(QSqlDatabase * &dbParam);
     QStringList getSourceDBTablePartitions(QString tableName);

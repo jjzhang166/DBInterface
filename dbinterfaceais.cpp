@@ -43,14 +43,14 @@ bool DBInterfaceAIS::connectToDB()
 }
 
 //快速将大量数据插入表格
-bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QList <QVariantList> listColumnData)
+bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QList <QVariantList> listColumnData, QString insertMethod)
 {
     query.setForwardOnly(true);
     qint16 columnCount=listColumnData.size();
     if(columnCount<=0)
         return false;
 
-    QString prepareSQL="insert into "+tableName+" values (";
+    QString prepareSQL=insertMethod+" into "+tableName+" values (";
     for(int i=0;i<columnCount;i++)
         prepareSQL.append("?,");
 
@@ -71,6 +71,43 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QLis
     }
 
     if (!query.execBatch())
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+    else
+        return true;
+}
+
+bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod)
+{
+    query.setForwardOnly(true);
+    qint16 columnCount=listData.size();
+    if(columnCount<=0)
+        return false;
+
+    QString prepareSQL=insertMethod+" into "+tableName+" values (";
+    for(int i=0;i<columnCount;i++)
+        prepareSQL.append("?,");
+
+    prepareSQL.chop(1); //去掉最后一个逗号
+    prepareSQL.append(")");
+
+    if(!query.prepare(prepareSQL))
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+
+    QListIterator <QVariant> iListData(listData);
+    while(iListData.hasNext())
+    {
+        query.addBindValue(iListData.next());
+    }
+
+    if (!query.exec())
     {
         qDebug() <<query.lastError();
         sigShowInfo(query.lastError().text());
