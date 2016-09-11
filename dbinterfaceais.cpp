@@ -119,6 +119,43 @@ bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList
         return true;
 }
 
+bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod)
+{
+    query.setForwardOnly(true);
+    qint16 columnCount=listData.size();
+    if(columnCount<=0)
+        return false;
+
+    QString prepareSQL=insertMethod+" into "+tableName+" values (";
+    for(int i=0;i<columnCount;i++)
+        prepareSQL.append("?,");
+
+    prepareSQL.chop(1); //去掉最后一个逗号
+    prepareSQL.append(")");
+
+    if(!query.prepare(prepareSQL))
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+
+    QListIterator <QVariant> iListData(listData);
+    while(iListData.hasNext())
+    {
+        query.addBindValue(iListData.next());
+    }
+
+    if (!query.exec())
+    {
+        qDebug() <<query.lastError();
+        sigShowInfo(query.lastError().text());
+        return false;
+    }
+    else
+        return true;
+}
+
 QStringList DBInterfaceAIS::getSourceDBTablePartitions(QString tableName)
 {
     QStringList listPartitions;
