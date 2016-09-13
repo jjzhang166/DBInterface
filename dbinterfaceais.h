@@ -10,6 +10,7 @@
 #define BATCHES_OF_SINGLE_TRANSACTION 1000 //一个事务中多少个batch
 #define ROWS_OF_SINGLE_BATCH 1500 //一个Batch导入多少行数据
 
+class QSqlQuery;
 struct StructDBInfo
 {
     QString type;
@@ -42,6 +43,7 @@ public:
     bool checkConnection(QSqlDatabase * &dbParam);
     QStringList getSourceDBTablePartitions(QString tableName);
     QMutex *mutex;
+    QSqlQuery *query1;
 
 signals:
     void sigShowInfo(QString str);

@@ -12,6 +12,7 @@ DBInterfaceAIS::DBInterfaceAIS(QMutex *mutex, StructDBInfo structDBInfo, QObject
     : QObject(parent)
 {
     db=NULL;
+    query1=NULL;
     this->mutex=mutex;
     dbInfo=structDBInfo;
 }
@@ -39,6 +40,8 @@ bool DBInterfaceAIS::connectToDB()
     {
         emit sigShowInfo("Database is connected successfully! Connection name is "+db->connectionName());
         qDebug()<<"Database is connected successfully! Connection name is "+db->connectionName();
+        query1=new QSqlQuery(*db);
+        query1->setForwardOnly(true);
         return true;
     }
 }
@@ -112,43 +115,6 @@ bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList
     if (!query.exec())
     {
         qDebug() <<prepareSQL<<". Error info:"<<query.lastError();
-        sigShowInfo(query.lastError().text());
-        return false;
-    }
-    else
-        return true;
-}
-
-bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod)
-{
-    query.setForwardOnly(true);
-    qint16 columnCount=listData.size();
-    if(columnCount<=0)
-        return false;
-
-    QString prepareSQL=insertMethod+" into "+tableName+" values (";
-    for(int i=0;i<columnCount;i++)
-        prepareSQL.append("?,");
-
-    prepareSQL.chop(1); //去掉最后一个逗号
-    prepareSQL.append(")");
-
-    if(!query.prepare(prepareSQL))
-    {
-        qDebug() <<query.lastError();
-        sigShowInfo(query.lastError().text());
-        return false;
-    }
-
-    QListIterator <QVariant> iListData(listData);
-    while(iListData.hasNext())
-    {
-        query.addBindValue(iListData.next());
-    }
-
-    if (!query.exec())
-    {
-        qDebug() <<query.lastError();
         sigShowInfo(query.lastError().text());
         return false;
     }
