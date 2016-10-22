@@ -7,14 +7,20 @@
 #include <QSqlRecord>
 #include "dbinterfaceais.h"
 #include <QtMath>
+#include <QTimer>
 
 DBInterfaceAIS::DBInterfaceAIS(QMutex *mutex, StructDBInfo structDBInfo, QObject *parent)
     : QObject(parent)
 {
     db=NULL;
     query1=NULL;
+    timerCheckConnection=new QTimer(this);
+    connect(timerCheckConnection,SIGNAL(timeout()),
+            this,SLOT(slotTimerEventCheckConnection()));
+    timerCheckConnection->start(3600000);//一小时检查一次
     this->mutex=mutex;
     dbInfo=structDBInfo;
+
 }
 
 bool DBInterfaceAIS::connectToDB()
@@ -46,11 +52,31 @@ bool DBInterfaceAIS::connectToDB()
     }
 }
 
+void DBInterfaceAIS::slotTimerEventCheckConnection()
+{
+    qint64 reTryConnectTimes=0;
+    while(!checkConnection(db)) //检测连接是否还在
+    {
+        reTryConnectTimes++;
+        emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
+                         +" COnnection name is "+db->connectionName()
+                         +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
+    }
+}
+
 //快速将大量数据插入表格
 bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QList <QVariantList> listColumnData, QString insertMethod)
 {
-
-    query.setForwardOnly(true);
+    qint64 reTryConnectTimes=0;
+    while(!checkConnection(db)) //检测连接是否还在
+    {
+        reTryConnectTimes++;
+        emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
+                         +" COnnection name is "+db->connectionName()
+                         +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
+    }
     qint16 columnCount=listColumnData.size();
     if(columnCount<=0)
         return false;
@@ -87,7 +113,6 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QLis
 
 bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod)
 {
-    query.setForwardOnly(true);
     qint16 columnCount=listData.size();
     if(columnCount<=0)
         return false;

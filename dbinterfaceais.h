@@ -11,6 +11,7 @@
 #define ROWS_OF_SINGLE_BATCH 1500 //一个Batch导入多少行数据
 
 class QSqlQuery;
+class QTimer;
 struct StructDBInfo
 {
     QString type;
@@ -48,10 +49,12 @@ public:
 signals:
     void sigShowInfo(QString str);
 public slots:
+    void slotTimerEventCheckConnection();
 
 private:
     bool reConnectToDB(QSqlDatabase * &dbParam);
     StructDBInfo dbInfo;
+    QTimer *timerCheckConnection;
 };
 
 #endif // DBINTERFACEAIS_H
