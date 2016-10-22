@@ -5,7 +5,7 @@
 #include <QSqlDatabase>
 #include <QMutex>
 
-#define TABLE_NAME_FOR_CON_CHECK "DUAL" //用于测试数据库连接性
+//#define TABLE_NAME_FOR_CON_CHECK "DUAL" //用于测试数据库连接性
 
 #define BATCHES_OF_SINGLE_TRANSACTION 1000 //一个事务中多少个batch
 #define ROWS_OF_SINGLE_BATCH 1500 //一个Batch导入多少行数据

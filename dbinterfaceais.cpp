@@ -229,7 +229,10 @@ bool DBInterfaceAIS::checkConnection(QSqlDatabase * &dbParam)
     if(dbParam->isOpen())
     {
         QSqlQuery query(*dbParam);
-        if(query.exec("select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1"))
+        QString strSQL;
+        //strSQL="select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1";
+        strSQL="show tables";
+        if(query.exec(strSQL))
             return true;
         else
         {
@@ -277,7 +280,10 @@ bool DBInterfaceAIS::reConnectToDB(QSqlDatabase * &dbParam)
     }
 
     QSqlQuery query(*dbParam);
-    if(query.exec("select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1"))
+    QString strSQL;
+    //strSQL="select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1";
+    strSQL="show tables";
+    if(query.exec(strSQL))
         return true;
     else
         return false;
