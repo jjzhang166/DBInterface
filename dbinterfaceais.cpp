@@ -8,6 +8,7 @@
 #include "dbinterfaceais.h"
 #include <QtMath>
 #include <QTimer>
+#include <QCoreApplication>
 
 DBInterfaceAIS::DBInterfaceAIS(QMutex *mutex, StructDBInfo structDBInfo, QObject *parent)
     : QObject(parent)
@@ -124,7 +125,10 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName,
             return false;
         }
         if(rowIndex/ROWS_OF_SINGLE_BATCH%10==0)
+        {
+            qApp->processEvents();
             qDebug()<<"Value of current rowIndex:"<<rowIndex;
+        }
     }
 
     return true;
