@@ -20,7 +20,6 @@ DBInterfaceAIS::DBInterfaceAIS(QMutex *mutex, StructDBInfo structDBInfo, QObject
     timerCheckConnection->start(3600000);//一小时检查一次
     this->mutex=mutex;
     dbInfo=structDBInfo;
-
 }
 
 bool DBInterfaceAIS::connectToDB()
@@ -55,18 +54,24 @@ bool DBInterfaceAIS::connectToDB()
 void DBInterfaceAIS::slotTimerEventCheckConnection()
 {
     qint64 reTryConnectTimes=0;
+    qDebug()<<"Checking connection with MySQL...";
     while(!checkConnection(db)) //检测连接是否还在
     {
         reTryConnectTimes++;
         emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
                          +" COnnection name is "+db->connectionName()
                          +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        qDebug()<<"Connection to source database  failed!"+db->lastError().text()
+                  +" COnnection name is "+db->connectionName()
+                  +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds";
         this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
     }
+    qDebug()<<"Connection with MySQL is ok!";
 }
 
-//快速将大量数据插入表格
-bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QList <QVariantList> listColumnData, QString insertMethod)
+//快速将大量数据插入表格。参数通过引用传递，减少内存占用
+bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName,
+                        QList<QVariantList> &listColumnData, QString insertMethod)
 {
     qint64 reTryConnectTimes=0;
     while(!checkConnection(db)) //检测连接是否还在
@@ -88,6 +93,11 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QLis
     prepareSQL.chop(1); //去掉最后一个逗号
     prepareSQL.append(")");
 
+    qint64 rowCount=listColumnData.first().size();//行数
+    qint64 rowIndex=0;
+    if(rowCount<=0)
+        return false;
+
     if(!query.prepare(prepareSQL))
     {
         qDebug() <<prepareSQL<<". Error info:"<< query.lastError().text()<<endl;
@@ -95,20 +105,26 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName, QLis
         return false;
     }
 
-    while(!listColumnData.isEmpty())
+    while(rowIndex<rowCount)//一次插入太多会导致超出数据库的max_allowed_packet
     {
-        QVariantList listRowData=listColumnData.takeFirst();
-        query.addBindValue(listRowData);
+        for(int indexColumn=0;indexColumn<columnCount;indexColumn++)
+        {
+            QVariantList listDataOfOneColumn=listColumnData.at(indexColumn)
+                    .mid(rowIndex,ROWS_OF_SINGLE_BATCH);
+            query.addBindValue(listDataOfOneColumn);
+        }
+        rowIndex+=ROWS_OF_SINGLE_BATCH;
+        if (!query.execBatch())
+        {
+            qDebug() <<"Fail to execBatch:"<<prepareSQL<<query.lastError().text();
+            sigShowInfo(query.lastError().text());
+            return false;
+        }
+        if(rowIndex/ROWS_OF_SINGLE_BATCH%10==0)
+            qDebug()<<"Value of current rowIndex:"<<rowIndex;
     }
 
-    if (!query.execBatch())
-    {
-        qDebug() <<"Fail to execBatch:"<<prepareSQL<<query.lastError().text();
-        sigShowInfo(query.lastError().text());
-        return false;
-    }
-    else
-        return true;
+    return true;
 }
 
 bool DBInterfaceAIS::insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod)
@@ -243,6 +259,8 @@ bool DBInterfaceAIS::checkConnection(QSqlDatabase * &dbParam)
     {
         emit sigShowInfo("Can't connect to  database! Connection name is:"+dbParam->connectionName()+
                          dbParam->lastError().text());
+        qDebug()<<"Can't connect to  database! Connection name is:"+dbParam->connectionName()+
+                  dbParam->lastError().text();
         return reConnectToDB(dbParam);
 
     }
@@ -277,6 +295,8 @@ bool DBInterfaceAIS::reConnectToDB(QSqlDatabase * &dbParam)
     {
         emit sigShowInfo("database is connected successfully!"+dbParam->lastError().text()+
                          " Connection name is "+dbParam->connectionName());
+        qDebug()<<"database is connected successfully!"+dbParam->lastError().text()+
+                  " Connection name is "+dbParam->connectionName();
     }
 
     QSqlQuery query(*dbParam);

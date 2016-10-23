@@ -14,19 +14,19 @@ int main(int argc, char *argv[])
     dbInfo.dbName=argv[3];
     dbInfo.hostIP="127.0.0.1";
     dbInfo.pwd=argv[2];
-    dbInfo.type="QPSQL";
+    dbInfo.type="QMYSQL";
     dbInfo.userName=argv[1];
     DBInterfaceAIS *dbi=new DBInterfaceAIS(mutex,dbInfo);
     dbi->connectToDB();
     QSqlQuery query(*(dbi->db));
     query.setForwardOnly(true);
     QVariantList listCol1,listCol2;
-    listCol1<<5<<6;
-    listCol2<<6<<5;
+    listCol1<<5<<6<<7<<8<<9;
+    listCol2<<6<<5<<3<<3<<2;
     QList <QVariantList> listData;
     listData.append(listCol1);
     listData.append(listCol2);
-    if(!dbi->quickInsertInBatch(query,"public.test_primary_key",listData))
+    if(!dbi->quickInsertInBatch(query,"test_insert",listData))
         qDebug()<<"Fail to insert";
     else
         qDebug()<<"Insert succefull";

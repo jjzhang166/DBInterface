@@ -8,7 +8,7 @@
 //#define TABLE_NAME_FOR_CON_CHECK "DUAL" //用于测试数据库连接性
 
 #define BATCHES_OF_SINGLE_TRANSACTION 1000 //一个事务中多少个batch
-#define ROWS_OF_SINGLE_BATCH 1500 //一个Batch导入多少行数据
+#define ROWS_OF_SINGLE_BATCH 100000 //一个Batch导入多少行数据
 
 class QSqlQuery;
 class QTimer;
@@ -37,7 +37,7 @@ public:
     QSqlDatabase *db;
     //快速将多行数据批量插入表格
     bool quickInsertInBatch(QSqlQuery query,QString tableName,
-                            QList <QVariantList> listColumnData,QString insertMethod="insert ignore");
+                      QList <QVariantList> &listColumnData,QString insertMethod="insert ignore");
     //将一行数据插入表格
     bool insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod);
 
