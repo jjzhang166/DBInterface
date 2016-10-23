@@ -41,7 +41,7 @@ public:
     //将一行数据插入表格
     bool insertOneRow(QSqlQuery query,QString tableName,QVariantList listData,QString insertMethod);
 
-    bool checkConnection(QSqlDatabase * &dbParam);
+    bool checkConnection();
     QStringList getSourceDBTablePartitions(QString tableName);
     QMutex *mutex;
     QSqlQuery *query1;
@@ -52,7 +52,7 @@ public slots:
     void slotTimerEventCheckConnection();
 
 private:
-    bool reConnectToDB(QSqlDatabase * &dbParam);
+    bool reConnectToDB();
     StructDBInfo dbInfo;
     QTimer *timerCheckConnection;
 };

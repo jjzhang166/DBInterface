@@ -55,7 +55,7 @@ void DBInterfaceAIS::slotTimerEventCheckConnection()
 {
     qint64 reTryConnectTimes=0;
     qDebug()<<"Checking connection with MySQL...";
-    while(!checkConnection(db)) //检测连接是否还在
+    while(!checkConnection()) //检测连接是否还在
     {
         reTryConnectTimes++;
         emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
@@ -74,12 +74,15 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName,
                         QList<QVariantList> &listColumnData, QString insertMethod)
 {
     qint64 reTryConnectTimes=0;
-    while(!checkConnection(db)) //检测连接是否还在
+    while(!checkConnection()) //检测连接是否还在
     {
         reTryConnectTimes++;
         emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
                          +" COnnection name is "+db->connectionName()
                          +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        qDebug()<<"Connection to source database  failed!"+db->lastError().text()
+                  +" COnnection name is "+db->connectionName()
+                  +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds";
         this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
     }
     qint16 columnCount=listColumnData.size();
@@ -168,12 +171,15 @@ QStringList DBInterfaceAIS::getSourceDBTablePartitions(QString tableName)
     QStringList listPartitions;
 
     qint64 reTryConnectTimes=0;
-    while(!checkConnection(db)) //检测连接是否还在
+    while(!checkConnection()) //检测连接是否还在
     {
         reTryConnectTimes++;
         emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
                          +" COnnection name is "+db->connectionName()
                          +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        qDebug()<<"Connection to source database  failed!"+db->lastError().text()
+                  +" COnnection name is "+db->connectionName()
+                  +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds";
         this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
     }
 
@@ -217,6 +223,18 @@ bool DBInterfaceAIS::hasFeatureOfTransaction()
 
 bool DBInterfaceAIS::startTransaction()
 {
+    qint64 reTryConnectTimes=0;
+    while(!checkConnection()) //检测连接是否还在
+    {
+        reTryConnectTimes++;
+        emit sigShowInfo("Connection to source database  failed!"+db->lastError().text()
+                         +" COnnection name is "+db->connectionName()
+                         +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds");
+        qDebug()<<"Connection to source database  failed!"+db->lastError().text()
+                  +" COnnection name is "+db->connectionName()
+                  +" This therad will sleep "+QByteArray::number(pow(4,reTryConnectTimes))+" seconds";
+        this->thread()->sleep(pow(4,reTryConnectTimes)); //等待
+    }
     return db->transaction();
 }
 
@@ -225,77 +243,75 @@ bool DBInterfaceAIS::commitTransaction()
     return db->commit();
 }
 
-bool DBInterfaceAIS::checkConnection(QSqlDatabase * &dbParam)
+bool DBInterfaceAIS::checkConnection()
 {
-    if(dbParam==NULL||db==NULL)
+    if(db==NULL||db==NULL)
     {
         return false;
     }
 
     StructDBInfo dbInfo;
-    dbInfo.connectionName=dbParam->connectionName();
-    dbInfo.dbName=dbParam->databaseName();
-    dbInfo.hostIP=dbParam->hostName();
-    dbInfo.pwd=dbParam->password();
-    dbInfo.userName=dbParam->userName();
-    dbInfo.type=dbParam->driverName();
-    if(dbParam->isOpen())
+    dbInfo.connectionName=db->connectionName();
+    dbInfo.dbName=db->databaseName();
+    dbInfo.hostIP=db->hostName();
+    dbInfo.pwd=db->password();
+    dbInfo.userName=db->userName();
+    dbInfo.type=db->driverName();
+    if(db->isOpen())
     {
-        QSqlQuery query(*dbParam);
         QString strSQL;
         //strSQL="select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1";
         strSQL="show tables";
-        if(query.exec(strSQL))
+        if(query1->exec(strSQL))
             return true;
         else
         {
-            return reConnectToDB(dbParam);
+            return reConnectToDB();
         }
     }
-    else if(!dbParam->open())
+    else if(!db->open())
     {
-        emit sigShowInfo("Can't connect to  database! Connection name is:"+dbParam->connectionName()+
-                         dbParam->lastError().text());
-        qDebug()<<"Can't connect to  database! Connection name is:"+dbParam->connectionName()+
-                  dbParam->lastError().text();
-        return reConnectToDB(dbParam);
+        emit sigShowInfo("Can't connect to  database! Connection name is:"+db->connectionName()+
+                         db->lastError().text());
+        qDebug()<<"Can't connect to  database! Connection name is:"+db->connectionName()+
+                  db->lastError().text();
+        return reConnectToDB();
 
     }
     else
     {
-        emit sigShowInfo("Database is reConnected successfully! Connection name is:"+dbParam->connectionName());
-        qDebug()<<"Database is reConnected successfully! Connection name is:"<<dbParam->connectionName();
+        emit sigShowInfo("Database is reConnected successfully! Connection name is:"+db->connectionName());
+        qDebug()<<"Database is reConnected successfully! Connection name is:"<<db->connectionName();
 
         return true;
     }
 }
 
-bool DBInterfaceAIS::reConnectToDB(QSqlDatabase * &dbParam)
+bool DBInterfaceAIS::reConnectToDB()
 {
-    QSqlDatabase::removeDatabase(dbParam->connectionName());
-    dbParam->close();
-    delete dbParam;
-    dbParam=NULL;
+    QSqlDatabase::removeDatabase(db->connectionName());
+    db->close();
+    delete db;
 
     qDebug()<<"Adding database:"<<dbInfo.connectionName;
-    dbParam = new QSqlDatabase(QSqlDatabase::addDatabase(dbInfo.type,dbInfo.connectionName));
-    dbParam->setHostName(dbInfo.hostIP);
-    dbParam->setDatabaseName(dbInfo.dbName); //Oracle的SID
-    dbParam->setUserName(dbInfo.userName);
-    dbParam->setPassword(dbInfo.pwd);
-    if(!dbParam->open())
+    db = new QSqlDatabase(QSqlDatabase::addDatabase(dbInfo.type,dbInfo.connectionName));
+    db->setHostName(dbInfo.hostIP);
+    db->setDatabaseName(dbInfo.dbName); //Oracle的SID
+    db->setUserName(dbInfo.userName);
+    db->setPassword(dbInfo.pwd);
+    if(!db->open())
     {
-        emit sigShowInfo("Can't connect to  database! "+dbParam->lastError().text()+
-                         " Connection name is "+dbParam->connectionName());
-        qDebug()<<"Can't coonect to db:"+dbParam->connectionName();
+        emit sigShowInfo("Can't connect to  database! "+db->lastError().text()+
+                         " Connection name is "+db->connectionName());
+        qDebug()<<"Can't coonect to db:"+db->connectionName();
         return false;
     }
     else
     {
-        emit sigShowInfo("database is connected successfully!"+dbParam->lastError().text()+
-                         " Connection name is "+dbParam->connectionName());        
-        qDebug()<<"database is connected successfully!"+dbParam->lastError().text()+
-                  " Connection name is "+dbParam->connectionName();
+        emit sigShowInfo("database is connected successfully!"+db->lastError().text()+
+                         " Connection name is "+db->connectionName());
+        qDebug()<<"database is connected successfully!"+db->lastError().text()+
+                  " Connection name is "+db->connectionName();
     }
 
     delete query1;
