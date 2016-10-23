@@ -293,16 +293,19 @@ bool DBInterfaceAIS::reConnectToDB(QSqlDatabase * &dbParam)
     else
     {
         emit sigShowInfo("database is connected successfully!"+dbParam->lastError().text()+
-                         " Connection name is "+dbParam->connectionName());
+                         " Connection name is "+dbParam->connectionName());        
         qDebug()<<"database is connected successfully!"+dbParam->lastError().text()+
                   " Connection name is "+dbParam->connectionName();
     }
 
-    QSqlQuery query(*dbParam);
+    delete query1;
+    query1=new QSqlQuery(*db);
+    query1->setForwardOnly(true);
+
     QString strSQL;
     //strSQL="select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1";
     strSQL="show tables";
-    if(query.exec(strSQL))
+    if(query1->exec(strSQL))
         return true;
     else
         return false;
