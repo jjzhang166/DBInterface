@@ -232,9 +232,6 @@ bool DBInterfaceAIS::checkConnection(QSqlDatabase * &dbParam)
         return false;
     }
 
-    if(dbParam->isOpen())
-        return true;
-
     StructDBInfo dbInfo;
     dbInfo.connectionName=dbParam->connectionName();
     dbInfo.dbName=dbParam->databaseName();
@@ -267,6 +264,8 @@ bool DBInterfaceAIS::checkConnection(QSqlDatabase * &dbParam)
     else
     {
         emit sigShowInfo("Database is reConnected successfully! Connection name is:"+dbParam->connectionName());
+        qDebug()<<"Database is reConnected successfully! Connection name is:"<<dbParam->connectionName();
+
         return true;
     }
 }
