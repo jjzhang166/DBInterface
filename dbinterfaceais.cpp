@@ -102,15 +102,17 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName,
     if(rowCount<=0)
         return false;
 
-    if(!query.prepare(prepareSQL))
-    {
-        qDebug() <<prepareSQL<<". Error info:"<< query.lastError().text()<<endl;
-        sigShowInfo(query.lastError().text());
-        return false;
-    }
-
     while(rowIndex<rowCount)//一次插入太多会导致超出数据库的max_allowed_packet
     {
+        //每次都要先prepare再addbindvalue，否则可能出错，只成功执行第一次操作。
+        //经过测试，如果不这么做，当数据量少的时候没问题，数据量大的时候，会失败。
+        if(!query.prepare(prepareSQL))
+        {
+            qDebug() <<prepareSQL<<". Error info:"<< query.lastError().text()<<endl;
+            sigShowInfo(query.lastError().text());
+            return false;
+        }
+
         for(int indexColumn=0;indexColumn<columnCount;indexColumn++)
         {
             QVariantList listDataOfOneColumn=listColumnData.at(indexColumn)
