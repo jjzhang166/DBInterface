@@ -9,6 +9,7 @@
 #include <QtMath>
 #include <QTimer>
 #include <QCoreApplication>
+#include <QDateTime>
 
 DBInterfaceAIS::DBInterfaceAIS(QMutex *mutex, StructDBInfo structDBInfo, QObject *parent)
     : QObject(parent)
@@ -126,10 +127,10 @@ bool DBInterfaceAIS::quickInsertInBatch(QSqlQuery query, QString tableName,
             sigShowInfo(query.lastError().text());
             return false;
         }
-        if(rowIndex/ROWS_OF_SINGLE_BATCH%10==0)
+        if(rowIndex/ROWS_OF_SINGLE_BATCH%1==0)
         {
             qApp->processEvents();
-            qDebug()<<"Value of current rowIndex:"<<rowIndex;
+            qDebug()<<QDateTime::currentDateTime()<<" Value of current rowIndex:"<<rowIndex;
         }
     }
 
