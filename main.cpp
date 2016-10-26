@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
     dbInfo.userName=argv[1];
     DBInterfaceAIS *dbi=new DBInterfaceAIS(mutex,dbInfo);
     dbi->connectToDB();
+    dbi->checkConnection();
+    dbi->reConnectToDB();
     QSqlQuery query(*(dbi->db));
     query.setForwardOnly(true);
     QVariantList listCol1,listCol2;

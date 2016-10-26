@@ -46,13 +46,14 @@ public:
     QMutex *mutex;
     QSqlQuery *query1;
 
+    bool reConnectToDB();
+
 signals:
     void sigShowInfo(QString str);
 public slots:
     void slotTimerEventCheckConnection();
 
 private:
-    bool reConnectToDB();
     StructDBInfo dbInfo;
     QTimer *timerCheckConnection;
 };

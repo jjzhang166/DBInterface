@@ -262,11 +262,15 @@ bool DBInterfaceAIS::checkConnection()
         QString strSQL;
         //strSQL="select 1 from " TABLE_NAME_FOR_CON_CHECK " limit 1";
         strSQL="show tables";
-        QSqlQuery queryTemp; //防止和别的query冲突，使用临时变量来查询
+        QSqlQuery queryTemp(*db); //防止和别的query冲突，使用临时变量来查询
         if(queryTemp.exec(strSQL))
+        {
+            qDebug()<<"Result of check database connection "<<db->connectionName()<<": OK!";
             return true;
+        }
         else
         {
+            qDebug()<<"Fail to exec sql when checking database connection. Reconnecting...";
             return reConnectToDB();
         }
     }
