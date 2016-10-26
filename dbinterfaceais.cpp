@@ -257,13 +257,6 @@ bool DBInterfaceAIS::checkConnection()
         return false;
     }
 
-    StructDBInfo dbInfo;
-    dbInfo.connectionName=db->connectionName();
-    dbInfo.dbName=db->databaseName();
-    dbInfo.hostIP=db->hostName();
-    dbInfo.pwd=db->password();
-    dbInfo.userName=db->userName();
-    dbInfo.type=db->driverName();
     if(db->isOpen())
     {
         QString strSQL;
