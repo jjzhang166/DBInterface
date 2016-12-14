@@ -16,6 +16,7 @@ struct StructDBInfo
 {
     QString type;
     QString hostIP;
+    qint32 port;
     QString userName;
     QString pwd;
     QString dbName;

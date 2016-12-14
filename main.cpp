@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     dbInfo.connectionName="Test";
     dbInfo.dbName=argv[3];
     dbInfo.hostIP="127.0.0.1";
+    dbInfo.port=3306;
     dbInfo.pwd=argv[2];
     dbInfo.type="QMYSQL";
     dbInfo.userName=argv[1];

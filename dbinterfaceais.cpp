@@ -31,6 +31,7 @@ bool DBInterfaceAIS::connectToDB()
     db = new QSqlDatabase(QSqlDatabase::addDatabase(dbInfo.type,dbInfo.connectionName));
 
     db->setHostName(dbInfo.hostIP);
+    db->setPort(dbInfo.port);
     db->setDatabaseName(dbInfo.dbName); //Oracle的SID
     db->setUserName(dbInfo.userName);
     db->setPassword(dbInfo.pwd);
