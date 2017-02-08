@@ -1,6 +1,7 @@
 QT += core sql
 QT -= gui
 
+INCLUDEPATH += $$PWD/Module_Qt_DBInterface
 CONFIG += c++11
 
 TARGET = DBInterface
@@ -10,7 +11,7 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    dbinterfaceais.cpp
+    Module_Qt_DBInterface/dbinterfaceais.cpp
 
 HEADERS += \
-    dbinterfaceais.h
+    Module_Qt_DBInterface/dbinterfaceais.h
